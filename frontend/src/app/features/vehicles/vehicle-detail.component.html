@@ -1,0 +1,67 @@
+<a mat-button routerLink="/vehiculos"><mat-icon>arrow_back</mat-icon>Vehículos</a>
+@if (loading()) { <mat-progress-bar mode="indeterminate" /> }
+
+@if (vehicle(); as v) {
+  <div class="page-header">
+    <div>
+      <h1><span class="mono">{{ v.plate }}</span> <app-chip [value]="v.status" /></h1>
+      <p>{{ v.type | label }} · {{ v.brand }} {{ v.model }} ({{ v.year }})</p>
+    </div>
+    @if (auth.canEdit()) {
+      <div class="header-actions">
+        <button mat-stroked-button [matMenuTriggerFor]="statusMenu" [disabled]="v.status === 'en_mantencion'"><mat-icon>swap_horiz</mat-icon>Cambiar estado</button>
+        <mat-menu #statusMenu="matMenu">
+          @for (s of manualStatuses; track s) {
+            <button mat-menu-item [disabled]="s === v.status" (click)="setStatus(s)">{{ s | label }}</button>
+          }
+        </mat-menu>
+        <button mat-stroked-button (click)="edit()"><mat-icon>edit</mat-icon>Editar</button>
+        <button mat-stroked-button (click)="newIncident()"><mat-icon>add_alert</mat-icon>Reportar incidencia</button>
+        <button mat-flat-button color="primary" (click)="newMaintenance()"><mat-icon>build</mat-icon>Nueva mantención</button>
+      </div>
+    }
+  </div>
+  @if (v.status === 'en_mantencion') {
+    <p class="muted small">El estado volverá a "Disponible" automáticamente al completar o cancelar la mantención en curso.</p>
+  }
+
+  <section class="facts card">
+    <div><small>Compañía</small><strong>{{ v.station || '—' }}</strong></div>
+    <div><small>Kilometraje</small><strong>{{ v.mileage | number }} km</strong></div>
+    <div><small>Mantenciones</small><strong>{{ maintenances().length }}</strong></div>
+    <div><small>Incidencias abiertas</small><strong>{{ openIncidents() }}</strong></div>
+    <div><small>Alertas vivas</small><strong>{{ alerts().length }}</strong></div>
+  </section>
+
+  <mat-tab-group class="card tabs" animationDuration="0">
+    <mat-tab [label]="'Mantenciones (' + maintenances().length + ')'">
+      @for (m of maintenances(); track m.id) {
+        <div class="row" [class.clickable]="auth.canEdit()" (click)="editMaintenance(m)">
+          <div class="when">{{ m.scheduledDate + 'T12:00' | date: 'dd-MM-yyyy' }}</div>
+          <div class="grow">{{ m.description }} <div class="small muted">{{ m.type | label }}</div></div>
+          <div>{{ m.cost | currency: 'CLP' : 'symbol-narrow' : '1.0-0' }}</div>
+          <app-chip [value]="m.status" />
+        </div>
+      } @empty { <p class="empty">Sin mantenciones registradas</p> }
+    </mat-tab>
+    <mat-tab [label]="'Incidencias (' + incidents().length + ')'">
+      @for (i of incidents(); track i.id) {
+        <div class="row clickable" (click)="openIncident(i)">
+          <div class="when">{{ i.createdAt | date: 'dd-MM-yyyy' }}</div>
+          <div class="grow">{{ i.title }} <div class="small muted">Reportada por {{ i.reportedBy?.fullName ?? '—' }}</div></div>
+          <app-chip [value]="i.severity" />
+          <app-chip [value]="i.status" />
+        </div>
+      } @empty { <p class="empty">Sin incidencias</p> }
+    </mat-tab>
+    <mat-tab [label]="'Alertas (' + alerts().length + ')'">
+      @for (a of alerts(); track a.id) {
+        <div class="row">
+          <app-chip [value]="a.severity" />
+          <div class="grow">{{ a.title }} <div class="small muted">{{ a.detail }}</div></div>
+          <app-chip [value]="a.status" />
+        </div>
+      } @empty { <p class="empty">Sin alertas vivas</p> }
+    </mat-tab>
+  </mat-tab-group>
+}

@@ -1,0 +1,101 @@
+<div class="page-header">
+  <div>
+    <h1>Dashboard</h1>
+    <p>Estado operacional de la flota en tiempo real</p>
+  </div>
+  <button mat-stroked-button (click)="load()" [disabled]="loading()"><mat-icon>refresh</mat-icon>Actualizar</button>
+</div>
+
+@if (loading()) { <mat-progress-bar mode="indeterminate" /> }
+
+<section class="kpis">
+  <a class="kpi card" routerLink="/vehiculos">
+    <mat-icon>local_shipping</mat-icon>
+    <div><span class="value">{{ vehicles()?.total ?? '–' }}</span><span class="label">Vehículos</span></div>
+  </a>
+  <a class="kpi card" routerLink="/vehiculos" [queryParams]="{ status: 'disponible' }">
+    <mat-icon class="ok">check_circle</mat-icon>
+    <div><span class="value">{{ (vehicles()?.availabilityPct ?? 0) | number: '1.0-1' }}%</span><span class="label">Disponibilidad</span></div>
+  </a>
+  <a class="kpi card" routerLink="/incidencias">
+    <mat-icon class="warn">report_problem</mat-icon>
+    <div><span class="value">{{ incidents()?.totalOpen ?? '–' }}</span><span class="label">Incidencias abiertas</span></div>
+  </a>
+  <a class="kpi card" routerLink="/alertas">
+    <mat-icon class="bad">notifications_active</mat-icon>
+    <div><span class="value">{{ alertSummary()?.unacknowledged ?? '–' }}</span><span class="label">Alertas sin reconocer</span></div>
+  </a>
+</section>
+
+<section class="grid">
+  <div class="card">
+    <h2>Estado de la flota</h2>
+    <div class="fleet">
+      <div class="donut" [style.background]="donut()">
+        <div class="hole">
+          <strong>{{ vehicles()?.byStatus?.disponible ?? 0 }}/{{ vehicles()?.total ?? 0 }}</strong>
+          <small>disponibles</small>
+        </div>
+      </div>
+      <ul class="legend">
+        @for (st of statuses; track st) {
+          <li>
+            <span class="dot" [style.background]="colors[st]"></span>
+            <a [routerLink]="['/vehiculos']" [queryParams]="{ status: st }">{{ st | label }}</a>
+            <strong>{{ vehicles()?.byStatus?.[st] ?? 0 }}</strong>
+          </li>
+        }
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <h2>Alertas prioritarias</h2>
+      <a mat-button routerLink="/alertas">Ver todas</a>
+    </div>
+    @for (a of topAlerts(); track a.id) {
+      <div class="row-item">
+        <app-chip [value]="a.severity" />
+        <div class="grow">
+          <div>{{ a.title }}</div>
+          <small class="muted">{{ a.type | label }} · {{ a.createdAt | date: 'dd-MM-yyyy HH:mm' }}</small>
+        </div>
+        @if (a.status === 'reconocida') { <mat-icon class="muted" title="Reconocida">done</mat-icon> }
+      </div>
+    } @empty {
+      <p class="empty">Sin alertas activas</p>
+    }
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <h2>Próximas mantenciones</h2>
+      <a mat-button routerLink="/mantenciones">Ver todas</a>
+    </div>
+    @for (m of upcoming(); track m.id) {
+      <div class="row-item">
+        <div class="date">{{ m.scheduledDate + 'T12:00' | date: 'dd MMM' }}</div>
+        <div class="grow">
+          <div><a [routerLink]="['/vehiculos', m.vehicle?.id]" class="mono">{{ m.vehicle?.plate }}</a> · {{ m.description }}</div>
+          <small class="muted">{{ m.type | label }}</small>
+        </div>
+      </div>
+    } @empty {
+      <p class="empty">No hay mantenciones programadas</p>
+    }
+  </div>
+
+  <div class="card">
+    <h2>Costo de mantenciones por vehículo</h2>
+    @for (c of costs(); track c.vehicleId) {
+      <div class="bar-row">
+        <a [routerLink]="['/vehiculos', c.vehicleId]" class="mono">{{ c.plate }}</a>
+        <div class="bar"><span [style.width.%]="(c.totalCost / maxCost()) * 100"></span></div>
+        <strong>{{ c.totalCost | currency: 'CLP' : 'symbol-narrow' : '1.0-0' }}</strong>
+      </div>
+    } @empty {
+      <p class="empty">Aún no hay costos registrados</p>
+    }
+  </div>
+</section>

@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: sigmve-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-sigmve}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-sigmve_pass}
+      POSTGRES_DB: ${DB_NAME:-sigmve}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: sigmve-backend
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-sigmve}
+      DB_PASSWORD: ${DB_PASSWORD:-sigmve_pass}
+      DB_NAME: ${DB_NAME:-sigmve}
+      JWT_SECRET: ${JWT_SECRET:-cambia_este_secreto}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@sigmve.cl}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin1234}
+      APP_TIMEZONE: ${APP_TIMEZONE:-America/Santiago}
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build: ./frontend
+    container_name: sigmve-frontend
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+
+volumes:
+  pgdata:

@@ -1,0 +1,82 @@
+@use '@angular/material' as mat;
+
+/* Tema de Angular Material (Material 3) con el rojo institucional de bomberos */
+$theme: mat.define-theme((
+  color: (theme-type: light, primary: mat.$red-palette, tertiary: mat.$orange-palette),
+  density: (scale: -1),
+));
+
+@include mat.core();
+html {
+  @include mat.all-component-themes($theme);
+  // Permite usar color="primary" / color="warn" en botones e íconos
+  @include mat.color-variants-backwards-compatibility($theme);
+}
+
+/* Estilos globales de SIGMVE. Los colores se definen una vez como variables. */
+:root {
+  --brand: #c62828;        /* rojo bomberos */
+  --brand-soft: #fdecea;
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --line: #e3e5e8;
+  --text: #1f2328;
+  --muted: #667085;
+  --ok: #1b7f3b;   --ok-bg: #e6f4ea;
+  --warn: #9a6200; --warn-bg: #fff4d6;
+  --bad: #b42318;  --bad-bg: #fdecea;
+  --info: #1d5fbf; --info-bg: #e8f0fe;
+  --mute-bg: #eef0f3;
+}
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; background: var(--bg); color: var(--text); }
+
+/* Encabezado de cada página: título a la izquierda, acciones a la derecha */
+.page-header {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px;
+  h1 { margin: 0; font-size: 24px; font-weight: 500; }
+  p { margin: 4px 0 0; color: var(--muted); }
+}
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+.card h2 { margin: 0 0 16px; font-size: 16px; font-weight: 500; }
+
+/* Barra de filtros sobre las tablas */
+.filters {
+  display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 8px;
+  mat-form-field { width: 200px; }
+  .grow { flex: 1; min-width: 200px; }
+}
+
+/* Tablas: contenedor con scroll horizontal en móvil */
+.table-wrap { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow-x: auto; }
+.table-wrap table { width: 100%; min-width: 720px; }
+.table-wrap tr.clickable { cursor: pointer; }
+.table-wrap tr.clickable:hover { background: #fafafa; }
+.empty { padding: 40px 16px; text-align: center; color: var(--muted); }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.mono { font-family: "Roboto Mono", monospace; letter-spacing: .5px; }
+.right { text-align: right !important; }
+.actions-cell { white-space: nowrap; text-align: right !important; }
+
+/* Etiquetas de estado (<app-chip>) */
+.chip {
+  display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap;
+}
+.tone-ok { color: var(--ok); background: var(--ok-bg); }
+.tone-warn { color: var(--warn); background: var(--warn-bg); }
+.tone-bad { color: var(--bad); background: var(--bad-bg); }
+.tone-info { color: var(--info); background: var(--info-bg); }
+.tone-muted { color: var(--muted); background: var(--mute-bg); }
+
+/* Formularios en diálogos: campos a todo el ancho, en dos columnas cuando hay espacio */
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 16px; }
+.form-grid .full { grid-column: 1 / -1; }
+.form-grid mat-form-field { width: 100%; }
+@media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+.dialog-error { color: var(--bad); background: var(--bad-bg); padding: 8px 12px; border-radius: 8px; margin-bottom: 12px; font-size: 14px; }
+
+.snack-ok { --mdc-snackbar-container-color: #1b5e20; }
+.snack-error { --mdc-snackbar-container-color: #8e1c14; }

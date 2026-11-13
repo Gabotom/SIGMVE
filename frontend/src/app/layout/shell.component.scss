@@ -1,0 +1,20 @@
+.shell { height: 100vh; }
+mat-sidenav-content { background: var(--bg); }
+.sidenav { width: 240px; border-right: 1px solid var(--line); background: var(--surface); }
+.brand {
+  display: flex; align-items: center; gap: 12px; padding: 20px 16px; border-bottom: 1px solid var(--line);
+  mat-icon { color: var(--brand); font-size: 32px; width: 32px; height: 32px; }
+  strong { display: block; font-size: 18px; letter-spacing: .5px; }
+  small { color: var(--muted); font-size: 12px; }
+}
+a.active { background: var(--brand-soft); font-weight: 500; }
+a.active mat-icon { color: var(--brand); }
+.toolbar { position: sticky; top: 0; z-index: 10; background: var(--surface); border-bottom: 1px solid var(--line); }
+.spacer { flex: 1; }
+.user-btn mat-icon { margin-right: 6px; }
+.menu-header { padding: 8px 16px 12px; display: flex; flex-direction: column; border-bottom: 1px solid var(--line); small { color: var(--muted); } }
+.content { padding: 24px; max-width: 1280px; margin: 0 auto; }
+@media (max-width: 600px) {
+  .content { padding: 16px; }
+  .user-name { display: none; }
+}

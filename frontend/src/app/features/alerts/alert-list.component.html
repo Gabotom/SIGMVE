@@ -1,0 +1,65 @@
+<div class="page-header">
+  <div>
+    <h1>Alertas</h1>
+    <p>
+      {{ summary()?.total ?? 0 }} viva(s), {{ summary()?.unacknowledged ?? 0 }} sin reconocer
+      @if (summary()?.lastEvaluatedAt) { · evaluadas {{ summary()!.lastEvaluatedAt | date: 'HH:mm' }} }
+    </p>
+  </div>
+  @if (auth.isAdmin()) {
+    <button mat-stroked-button (click)="evaluate()" matTooltip="Vuelve a revisar todas las reglas ahora"><mat-icon>sync</mat-icon>Evaluar ahora</button>
+  }
+</div>
+
+<div class="sev-cards">
+  @for (s of severities.slice().reverse(); track s) {
+    <button class="card sev tone-{{ s === 'critica' ? 'bad' : s === 'advertencia' ? 'warn' : 'info' }}" [class.selected]="filters.severity === s"
+      (click)="filters.severity = filters.severity === s ? '' : s; load()">
+      <span class="value">{{ summary()?.bySeverity?.[s] ?? 0 }}</span>
+      <span>{{ s | label }}</span>
+    </button>
+  }
+</div>
+
+<div class="filters">
+  <mat-button-toggle-group [(ngModel)]="view" (change)="load()">
+    <mat-button-toggle value="vivas">Vivas</mat-button-toggle>
+    <mat-button-toggle value="activa">Sin reconocer</mat-button-toggle>
+    <mat-button-toggle value="historial">Historial</mat-button-toggle>
+  </mat-button-toggle-group>
+  <mat-form-field>
+    <mat-label>Tipo</mat-label>
+    <mat-select [(ngModel)]="filters.type" (selectionChange)="load()">
+      <mat-option value="">Todos</mat-option>
+      @for (t of types; track t) { <mat-option [value]="t">{{ t | label }}</mat-option> }
+    </mat-select>
+  </mat-form-field>
+</div>
+
+@if (loading()) { <mat-progress-bar mode="indeterminate" /> }
+<div class="alert-list">
+  @for (a of alerts(); track a.id) {
+    <div class="card alert sev-{{ a.severity }}" [class.done]="a.status === 'resuelta'">
+      <mat-icon class="type-icon">{{ icons[a.type] }}</mat-icon>
+      <div class="body">
+        <div class="title">
+          <strong>{{ a.title }}</strong>
+          <app-chip [value]="a.severity" /> <app-chip [value]="a.status" />
+        </div>
+        <div class="muted">{{ a.detail }}</div>
+        <div class="small muted">
+          {{ a.type | label }} · detectada {{ a.createdAt | date: 'dd-MM-yyyy HH:mm' }}
+          @if (a.vehicle) { · <a [routerLink]="['/vehiculos', a.vehicle.id]" class="mono">{{ a.vehicle.plate }}</a> }
+          @if (a.acknowledgedBy) { · reconocida por {{ a.acknowledgedBy.fullName }} el {{ a.acknowledgedAt | date: 'dd-MM HH:mm' }} }
+          @if (a.resolvedAt) { · resuelta {{ a.resolvedAt | date: 'dd-MM-yyyy HH:mm' }} }
+        </div>
+        @if (a.acknowledgeNote) { <div class="note"><mat-icon inline>sticky_note_2</mat-icon> {{ a.acknowledgeNote }}</div> }
+      </div>
+      @if (a.status === 'activa' && auth.canEdit()) {
+        <button mat-stroked-button (click)="acknowledge(a)"><mat-icon>done</mat-icon>Reconocer</button>
+      }
+    </div>
+  } @empty {
+    @if (!loading()) { <div class="card empty"><mat-icon>verified</mat-icon><p>No hay alertas{{ view === 'historial' ? '' : ' pendientes' }}</p></div> }
+  }
+</div>
